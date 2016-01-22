@@ -1,0 +1,5 @@
+.babelrc
+/node_modules
+.DS_STORE
+*.log
+/config/environments/dev.env.js
