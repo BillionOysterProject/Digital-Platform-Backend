@@ -16,7 +16,7 @@ module.exports = function (passport, environment) {
     });
 
     var docClient = new DOC.DynamoDB();
-    
+
     // used to serialize the user for the session
     passport.serializeUser(function (user, done) {
         done(null, user.id);
@@ -64,7 +64,7 @@ module.exports = function (passport, environment) {
                                 userName: req.body.name,
                                 userEmail: email,
                                 userPassword: password,
-                                group: 'cat'
+                                group: req.body.accountType
                             };
                             docClient.putItem(params, function (err) {
                                 if (err) {
@@ -74,7 +74,7 @@ module.exports = function (passport, environment) {
                                 return done(null, true, { 'signupMessage': 'Account Created.' });
                             });
                         }
-                    }); 
+                    });
                     //if req.user already exists
                 } else {
                     // user is logged in and already has a local account. Ignore signup. (You should log out before trying to create a new account, user!)
@@ -105,7 +105,7 @@ module.exports = function (passport, environment) {
                 if (err) {
                     return done(err);
                 }
-                if(!data) {
+                if(!data.Item) {
                     return done(null, false, {'noUser':'User does not exist.'})
                 }
                 else {
@@ -113,6 +113,7 @@ module.exports = function (passport, environment) {
                         return done(null, true, data)
                     }
                     else{
+                      console.log('fail')
                         return done(null, false, {'passwordFail':'Bad Password'})
                     }
                 }
