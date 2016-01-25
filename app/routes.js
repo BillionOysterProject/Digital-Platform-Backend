@@ -1,9 +1,14 @@
 // app/routes.js
-module.exports = function(app, passport) {
+var liftDate = new Date();
 
+module.exports = function(app, passport) {
+    
+    app.get('/test', function(req, res){
+        res.jsonp({'startTime': liftDate});
+    });
     
     app.post('/login', function(req, res) {
-        //do something
+        //do something else
     });
 
     app.post('/signup', function(req, res, next) {
