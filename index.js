@@ -8,7 +8,7 @@ var env = require('./config/environments/dev.env.js'),
 var passport = require('passport');
 
 require('./config/express')(app);
-require('./config/passport')(passport);
+require('./config/passport')(passport, environment);
 require("./app/routes")(app, passport);
 
 app.listen(environment.port);
