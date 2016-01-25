@@ -7,8 +7,15 @@ module.exports = function(app, passport) {
         res.jsonp({'startTime': liftDate});
     });
     
-    app.post('/login', function(req, res) {
-        //do something else
+    app.post('/login', function(req, res, next) {
+        passport.authenticate('local-login', function(err, result, message){
+            if(err) {
+                res.jsonp(err)
+            }
+            else {
+                res.jsonp(message)
+            }
+        })(req, res, next);
     });
 
     app.post('/signup', function(req, res, next) {

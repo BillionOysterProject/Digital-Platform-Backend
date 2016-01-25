@@ -5,25 +5,16 @@ var LocalStrategy = require('passport-local').Strategy;
 var AWS = require("aws-sdk");
 var DOC = require("dynamodb-doc");
 
-
-var pfunc = function (err, data) {
-    if (err) {
-        console.log(err, err.stack);
-    } else {
-        console.log(data);
-    }
-};
-
 // expose this function to our app using module.exports
 module.exports = function (passport, environment) {
 
     //AWS user info for the user table passport will manage
     AWS.config.update({
-        accessKeyId: environment.AWS.accessKeyId, 
+        accessKeyId: environment.AWS.accessKeyId,
         secretAccessKey: environment.AWS.secretKeyId,
         region: "us-east-1"
     });
-    
+
     var docClient = new DOC.DynamoDB();
     
     // used to serialize the user for the session
@@ -39,11 +30,11 @@ module.exports = function (passport, environment) {
     });
 
     passport.use('local-signup', new LocalStrategy({
-            // by default, local strategy uses username and password, we will override with email
-            usernameField: 'email',
-            passwordField: 'password',
-            passReqToCallback: true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
-        },
+        // by default, local strategy uses username and password, we will override with email
+        usernameField: 'email',
+        passwordField: 'password',
+        passReqToCallback: true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
+    },
         function (req, email, password, done) {
             console.log(email)
             console.log(password)
@@ -57,34 +48,34 @@ module.exports = function (passport, environment) {
                 if (!req.user) {
                     var params = {};
                     params.TableName = 'dev-user';
-                    params.Key = {userEmail : email};
+                    params.Key = { userEmail: email };
                     docClient.getItem(params, function (err, data) {
                         // TODO - add password complexity, encrypting, etc
                         if (err) {
                             return done(err);
                         }
                         if (data.Item) {
-                            return done(null, false, {'signupMessage': 'That email is already taken.'});
-                        } 
+                            return done(null, false, { 'signupMessage': 'That email is already taken.' });
+                        }
                         else {
                             var params = {};
                             params.TableName = 'dev-user';
                             params.Item = {
-                                userName    : req.body.name,
-                                userEmail   : email,
+                                userName: req.body.name,
+                                userEmail: email,
                                 userPassword: password,
-                                group       : 'cat'
+                                group: 'cat'
                             };
                             docClient.putItem(params, function (err) {
                                 if (err) {
                                     return done(err);
                                 }
 
-                                return done(null, true,  {'signupMessage': 'Account Created.'});
+                                return done(null, true, { 'signupMessage': 'Account Created.' });
                             });
                         }
                     }); 
-                //if req.user already exists
+                    //if req.user already exists
                 } else {
                     // user is logged in and already has a local account. Ignore signup. (You should log out before trying to create a new account, user!)
                     return done(null, req.user);
@@ -93,6 +84,41 @@ module.exports = function (passport, environment) {
             });  //closes process.nextTick
 
         }
-    )); //closes local-signup
+        )); //closes local-signup
+
+    passport.use('local-login', new LocalStrategy({
+        // by default, local strategy uses username and password, we will override with email
+        usernameField: 'email',
+        passwordField: 'password',
+        passReqToCallback: true // allows us to pass in the req from our route (lets us check if a user is logged in or not)
+    },
+        function (req, email, password, done) {
+            if (email) {
+                email = email.toLowerCase(); // Use lower-case e-mails to avoid case-sensitive e-mail matching
+            }
+            var params = {};
+            params.TableName = 'dev-user';
+            params.Key = { userEmail: email };
+            docClient.getItem(params, function (err, data) {
+                // TODO - add password complexity, encrypting, etc
+                console.log(err, data)
+                if (err) {
+                    return done(err);
+                }
+                if(!data) {
+                    return done(null, false, {'noUser':'User does not exist.'})
+                }
+                else {
+                    if(data.Item.userPassword === password){
+                        return done(null, true, data)
+                    }
+                    else{
+                        return done(null, false, {'passwordFail':'Bad Password'})
+                    }
+                }
+            });
+
+        }));
+
 
 };
