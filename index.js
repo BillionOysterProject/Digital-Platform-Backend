@@ -9,7 +9,7 @@ var passport = require('passport');
 
 require('./config/express')(app);
 require('./config/passport')(passport, environment);
-require("./app/routes")(app, passport);
+require("./app/routes")(app, passport, environment);
 
 app.listen(environment.port);
 console.log('listening on port ' + environment.port)
