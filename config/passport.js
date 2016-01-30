@@ -2,7 +2,6 @@
 
 // load all the things we need
 var LocalStrategy = require('passport-local').Strategy;
-var JwtStrategy = require('passport-jwt').Strategy;
 var AWS = require("aws-sdk");
 var DOC = require("dynamodb-doc");
 
@@ -29,29 +28,6 @@ module.exports = function (passport, environment) {
             done(err, user);
         });
     });
-
-
-    var opts = {}
-    opts.secretOrKey = environment.tokenSecret;
-    opts.issuer = "accounts.bop.nyc";
-    opts.audience = "bop.nyc";
-    
-    passport.use(new JwtStrategy(opts, function (jwt_payload, done) {
-        var params = {};
-        params.TableName = 'dev-jwt';
-        params.Key = { jwtid: jwt_payload.sub };
-        docClient.getItem(params, function (err, user) {
-            if (err) {
-                return done(err, false);
-            }
-            if (user) {
-                done(null, user);
-            } else {
-                done(null, false);
-                // send login message
-            }
-        });
-    }));
 
     passport.use('local-signup', new LocalStrategy({
         // by default, local strategy uses username and password, we will override with email

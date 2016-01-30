@@ -1,6 +1,6 @@
 // app/routes.js
 var liftDate = new Date();
-var jwt = require("passport-jwt");
+var jwt = require('jsonwebtoken');
 
 module.exports = function(app, passport, environment) {
     
@@ -10,18 +10,20 @@ module.exports = function(app, passport, environment) {
     
     app.post('/login', function(req, res, next) {
         passport.authenticate('local-login', function(err, result, message){
-            console.log(result)
-            console.log(message)
-            var token = jwt.encode({ 
+            var profile = { 
                 username: message.Item.userName, 
                 email: message.Item.userEmail, 
                 group: message.Item.group
-            }, environment.tokenSecret);
+            };
+            var token = jwt.sign({
+                username: message.Item.userName, 
+                email: message.Item.userEmail, 
+                group: message.Item.group }, environment.tokenSecret);
             if(err) {
                 res.jsonp(err)
             }
             else {
-                res.jsonp({ token : token })
+                res.jsonp({ token : token, profile : profile })
             }
         })(req, res, next);
         
